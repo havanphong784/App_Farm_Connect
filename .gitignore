@@ -1,30 +1,23 @@
 ### IntelliJ IDEA ###
+.idea/
+*.iml
 out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-.kotlin
+gen/
 
-### Eclipse ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+### Compiled Class Files ###
+*.class
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+### Exported Bills ###
+src/Bill/*.pdf
 
-### VS Code ###
-.vscode/
-
-### Mac OS ###
+### Temp/Misc ###
+tash list
 .DS_Store
+
+### Others ###
+bin/
+target/
+.vscode/
+.settings/
+.project
+.classpath
