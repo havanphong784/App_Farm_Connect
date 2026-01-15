@@ -5,6 +5,7 @@ import com.itextpdf.text.Font;
 import com.itextpdf.text.pdf.*;
 
 import javax.swing.table.DefaultTableModel;
+import javax.swing.JOptionPane;
 import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,13 +19,29 @@ public class InvoicePDFUtil {
             String filePath
     ) {
         try {
+            File file = new File(filePath);
+            File parentDir = file.getParentFile();
+            if (parentDir != null && !parentDir.exists()) {
+                parentDir.mkdirs();
+            }
+
             Document document = new Document(PageSize.A4, 36, 36, 36, 36);
             PdfWriter.getInstance(document, new FileOutputStream(filePath));
             document.open();
 
-            Font titleFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
-            Font headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
-            Font normalFont = new Font(Font.FontFamily.HELVETICA, 12);
+            // Resilient font loading
+            Font titleFont, headerFont, normalFont;
+            try {
+                BaseFont bf = BaseFont.createFont("C:\\Windows\\Fonts\\arial.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                titleFont = new Font(bf, 18, Font.BOLD);
+                headerFont = new Font(bf, 12, Font.BOLD);
+                normalFont = new Font(bf, 12);
+            } catch (Exception e) {
+                System.err.println("Arial not found, using default Helvetica (Vietnamese may not show correctly)");
+                titleFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
+                headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
+                normalFont = new Font(Font.FontFamily.HELVETICA, 12);
+            }
 
             Paragraph title = new Paragraph("HOA DON FARM CONNECT", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
@@ -38,14 +55,19 @@ public class InvoicePDFUtil {
             addHeader(table, headerFont,
                     "Ten san pham", "So luong", "Don gia", "Thanh tien");
 
-            NumberFormat vnd = NumberFormat.getInstance(java.util.Locale.of("vi", "VN"));
+            // Use US locale for parsing internal string if they use dots/commas
+            NumberFormat vnd = NumberFormat.getInstance(java.util.Locale.forLanguageTag("vi-VN"));
             double total = 0;
 
             for (int r : rows) {
                 String name = model.getValueAt(r, 0).toString();
-                double price = Double.parseDouble(model.getValueAt(r, 1).toString());
-                int qty = Integer.parseInt(model.getValueAt(r, 2).toString());
-                double sum = Double.parseDouble(model.getValueAt(r, 3).toString());
+                Object priceVal = model.getValueAt(r, 1);
+                Object qtyVal = model.getValueAt(r, 2);
+                Object sumVal = model.getValueAt(r, 3);
+
+                double price = parseInternalDouble(priceVal);
+                int qty = Integer.parseInt(qtyVal.toString());
+                double sum = parseInternalDouble(sumVal);
                 total += sum;
 
                 table.addCell(new Phrase(name, normalFont));
@@ -64,9 +86,22 @@ public class InvoicePDFUtil {
             document.add(totalP);
 
             document.close();
+            JOptionPane.showMessageDialog(null, "Xuất hóa đơn thành công tại: " + filePath);
 
         } catch (Exception e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Lỗi xuất PDF: " + e.getMessage());
+        }
+    }
+
+    private static double parseInternalDouble(Object val) {
+        if (val == null) return 0;
+        if (val instanceof Number) return ((Number) val).doubleValue();
+        String s = val.toString().replace(".", "").replace(",", "");
+        try {
+            return Double.parseDouble(s);
+        } catch (Exception e) {
+            return 0;
         }
     }
 
@@ -82,7 +117,10 @@ public class InvoicePDFUtil {
 
     public static void openPDF(String path) {
         try {
-            Desktop.getDesktop().open(new File(path));
+            File file = new File(path);
+            if (file.exists()) {
+                Desktop.getDesktop().open(file);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -94,13 +132,27 @@ public class InvoicePDFUtil {
             java.math.BigDecimal totalAmount
     ) {
         try {
+            File file = new File(filePath);
+            File parentDir = file.getParentFile();
+            if (parentDir != null && !parentDir.exists()) {
+                parentDir.mkdirs();
+            }
+
             Document document = new Document(PageSize.A4, 36, 36, 36, 36);
             PdfWriter.getInstance(document, new FileOutputStream(filePath));
             document.open();
 
-            Font titleFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
-            Font headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
-            Font normalFont = new Font(Font.FontFamily.HELVETICA, 12);
+            Font titleFont, headerFont, normalFont;
+            try {
+                BaseFont bf = BaseFont.createFont("C:\\Windows\\Fonts\\arial.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                titleFont = new Font(bf, 18, Font.BOLD);
+                headerFont = new Font(bf, 12, Font.BOLD);
+                normalFont = new Font(bf, 12);
+            } catch (Exception e) {
+                titleFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
+                headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
+                normalFont = new Font(Font.FontFamily.HELVETICA, 12);
+            }
 
             Paragraph title = new Paragraph("HOA DON FARM CONNECT", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
@@ -116,19 +168,19 @@ public class InvoicePDFUtil {
 
             for (int i = 0; i < model.getRowCount(); i++) {
                 String name = model.getValueAt(i, 0).toString();
-                int qty = Integer.parseInt(model.getValueAt(i, 1).toString());
+                String qty = model.getValueAt(i, 1).toString();
                 String price = model.getValueAt(i, 2).toString();
                 String sum = model.getValueAt(i, 3).toString();
 
                 table.addCell(new Phrase(name, normalFont));
-                table.addCell(new Phrase(String.valueOf(qty), normalFont));
+                table.addCell(new Phrase(qty, normalFont));
                 table.addCell(new Phrase(price, normalFont));
                 table.addCell(new Phrase(sum, normalFont));
             }
 
             document.add(table);
 
-            NumberFormat vnd = NumberFormat.getInstance(java.util.Locale.of("vi", "VN"));
+            NumberFormat vnd = NumberFormat.getInstance(java.util.Locale.forLanguageTag("vi-VN"));
             Paragraph totalP = new Paragraph(
                     "\nTONG TIEN: " + vnd.format(totalAmount) + " VND",
                     headerFont
@@ -137,9 +189,11 @@ public class InvoicePDFUtil {
             document.add(totalP);
 
             document.close();
+            JOptionPane.showMessageDialog(null, "Xuất hóa đơn thành công tại: " + filePath);
 
         } catch (Exception e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Lỗi xuất PDF: " + e.getMessage());
         }
     }
 }

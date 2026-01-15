@@ -78,10 +78,9 @@ public class OrderFormNew extends JDialog {
         btnExport.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 
         btnExport.addActionListener(e -> {
-            String path = "src/Bill/hoa_don_" + orderId + ".pdf";
+            String path = "Bill/hoa_don_" + orderId + ".pdf";
             InvoicePDFUtil.exportFromTableModel(previewModel, path, totalAmount);
             InvoicePDFUtil.openPDF(path);
-            JOptionPane.showMessageDialog(this, "Xuất hóa đơn thành công!");
         });
 
         JPanel bottom = new JPanel();
