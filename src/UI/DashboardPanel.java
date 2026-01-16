@@ -138,7 +138,7 @@ public class DashboardPanel extends JPanel {
     private void createExpiredProductsPanel() {
         pnExpired = new JPanel(new BorderLayout(10, 10));
         pnExpired.setBackground(new Color(255, 248, 245));
-        pnExpired.setMaximumSize(new Dimension(Integer.MAX_VALUE, 400));
+        pnExpired.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         pnExpired.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(255, 200, 180), 1),
             BorderFactory.createEmptyBorder(15, 15, 15, 15)
